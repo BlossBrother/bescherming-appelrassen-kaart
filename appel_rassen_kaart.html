@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bescherming Appelrassen Wereldwijd</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f5f5f3; color: #1a1a1a; min-height: 100vh; }
+  .page { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+  header { margin-bottom: 1.5rem; }
+  header h1 { font-size: 22px; font-weight: 600; color: #1a1a1a; }
+  header p { font-size: 14px; color: #666; margin-top: 4px; }
+  .top-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+  select { padding: 8px 12px; border: 1px solid #d0d0cc; border-radius: 8px; font-size: 14px; background: #fff; color: #1a1a1a; min-width: 220px; cursor: pointer; outline: none; }
+  select:focus { border-color: #3b7a3a; box-shadow: 0 0 0 3px rgba(59,122,58,0.15); }
+  .reset-btn { padding: 8px 16px; border: 1px solid #d0d0cc; border-radius: 8px; font-size: 13px; background: #fff; color: #444; cursor: pointer; }
+  .reset-btn:hover { background: #f0f0ee; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: #666; align-items: center; }
+  .leg-item { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .map-wrap { background: #ddf0f5; border-radius: 12px; overflow: hidden; border: 1px solid #d0d0cc; }
+  svg#map { width: 100%; height: auto; display: block; }
+  .country { cursor: pointer; stroke: #fff; stroke-width: 0.5; transition: opacity .15s, fill .2s; }
+  .country.normal { fill: #9fd6a0; }
+  .country.highlighted { fill: #2d7a2c; }
+  .country.eu { fill: #5ab85c; }
+  .country.eu.highlighted { fill: #1a5c1a; }
+  .country:hover { opacity: 0.72; }
+  .info-panel { background: #fff; border: 1px solid #d0d0cc; border-radius: 12px; padding: 1.25rem 1.5rem; margin-top: 1rem; min-height: 90px; }
+  .info-panel h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #1a1a1a; }
+  .hint { font-size: 13px; color: #888; }
+  .tag { display: inline-block; background: #eaf3de; color: #3b6d11; font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 20px; margin: 3px 3px 3px 0; }
+  .section-label { font-size: 11px; font-weight: 600; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+  footer { margin-top: 2rem; font-size: 12px; color: #aaa; text-align: center; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>🍎 Bescherming Appelrassen Wereldwijd</h1>
+    <p>Selecteer een ras of klik op een land om te zien waar rassen beschermd zijn.</p>
+  </header>
+
+  <div class="top-bar">
+    <select id="ras-select">
+      <option value="">— Selecteer een ras —</option>
+    </select>
+    <button class="reset-btn" onclick="reset()">Wis selectie</button>
+    <div class="legend">
+      <div class="leg-item"><div class="dot" style="background:#2d7a2c"></div>Beschermd</div>
+      <div class="leg-item"><div class="dot" style="background:#9fd6a0"></div>Niet beschermd</div>
+      <div class="leg-item"><div class="dot" style="background:#5ab85c"></div>EU-lidstaten</div>
+    </div>
+  </div>
+
+  <div class="map-wrap">
+    <svg id="map" viewBox="0 0 1010 570" xmlns="http://www.w3.org/2000/svg">
+      <!-- Oceaan labels -->
+      <text x="700" y="200" font-size="13" fill="#a0ccd6" font-family="sans-serif" opacity="0.8">Stille Oceaan</text>
+      <text x="310" y="310" font-size="13" fill="#a0ccd6" font-family="sans-serif" opacity="0.8">Atlantische Oceaan</text>
+      <text x="640" y="340" font-size="11" fill="#a0ccd6" font-family="sans-serif" opacity="0.8">Indische Oceaan</text>
+
+      <!-- Canada -->
+      <path class="country normal" id="c-canada" data-name="CANADA" d="M80,95 L245,88 L252,145 L232,172 L78,178 Z"/>
+      <!-- USA -->
+      <path class="country normal" id="c-usa" data-name="AMERIKA (USA)" d="M82,182 L228,176 L235,215 L218,246 L178,258 L138,252 L98,248 L76,228 Z"/>
+      <!-- Chili -->
+      <path class="country normal" id="c-chili" data-name="CHILI" d="M178,360 L196,356 L198,430 L178,432 Z"/>
+      <!-- Engeland -->
+      <path class="country normal" id="c-engeland" data-name="ENGELAND" d="M438,122 L458,118 L463,152 L446,158 L435,145 Z"/>
+      <!-- Noorwegen -->
+      <path class="country normal" id="c-noorwegen" data-name="NOORWEGEN" d="M468,72 L514,68 L522,112 L492,122 L463,112 Z"/>
+      <!-- Nederland -->
+      <path class="country normal" id="c-nederland" data-name="NEDERLAND" d="M455,138 L476,135 L478,156 L456,158 Z"/>
+      <!-- Slowakije -->
+      <path class="country normal" id="c-slowakije" data-name="SLOWAKIJE" d="M536,162 L562,160 L563,178 L537,179 Z"/>
+      <!-- EU blok -->
+      <path class="country eu normal" id="c-eu" data-name="EUROPESE UNIE" d="M452,138 L572,128 L592,202 L572,244 L492,254 L456,232 L448,192 Z"/>
+      <!-- Zwitserland -->
+      <path class="country normal" id="c-zwitserland" data-name="ZWITSERLAND" d="M486,192 L512,189 L514,212 L488,214 Z"/>
+      <!-- Polen -->
+      <path class="country normal" id="c-polen" data-name="POLEN" d="M524,138 L562,135 L564,164 L526,166 Z"/>
+      <!-- Servie -->
+      <path class="country normal" id="c-servie" data-name="SERVIE" d="M534,182 L560,180 L562,204 L536,206 Z"/>
+      <!-- Turkije -->
+      <path class="country normal" id="c-turkije" data-name="TURKIJE" d="M572,188 L645,183 L648,218 L574,222 Z"/>
+      <!-- Rusland -->
+      <path class="country normal" id="c-rusland" data-name="RUSLAND" d="M530,60 L820,45 L825,130 L532,135 Z"/>
+      <!-- Oekraine -->
+      <path class="country normal" id="c-oekraine" data-name="OEKRAINE" d="M560,140 L650,135 L655,170 L562,174 Z"/>
+      <!-- China -->
+      <path class="country normal" id="c-china" data-name="CHINA" d="M700,130 L840,125 L845,220 L702,225 Z"/>
+      <!-- India -->
+      <path class="country normal" id="c-india" data-name="INDIA" d="M680,220 L730,218 L735,295 L682,298 Z"/>
+      <!-- Japan -->
+      <path class="country normal" id="c-japan" data-name="JAPAN" d="M848,148 L870,145 L872,200 L850,202 Z"/>
+      <!-- Australie -->
+      <path class="country normal" id="c-australie" data-name="AUSTRALIE" d="M778,338 L892,332 L897,422 L780,425 Z"/>
+      <!-- Nieuw Zeeland -->
+      <path class="country normal" id="c-nieuwzeeland" data-name="NIEUW ZEELAND" d="M900,400 L920,397 L922,445 L902,447 Z"/>
+      <!-- Zuid Afrika -->
+      <path class="country normal" id="c-zuidafrika" data-name="ZUID AFRIKA" d="M533,388 L592,383 L594,438 L535,440 Z"/>
+
+      <!-- Landlabels -->
+      <text x="155" y="136" font-size="10" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">Canada</text>
+      <text x="155" y="220" font-size="10" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">Amerika (VS)</text>
+      <text x="186" y="397" font-size="8" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">Chili</text>
+      <text x="448" y="140" font-size="7" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">UK</text>
+      <text x="492" y="95" font-size="9" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">Noorwegen</text>
+      <text x="466" y="150" font-size="7" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">NL</text>
+      <text x="550" y="172" font-size="7" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">Slowakije</text>
+      <text x="522" y="196" font-size="10" fill="#fff" font-family="sans-serif" text-anchor="middle" pointer-events="none">EU</text>
+      <text x="500" y="205" font-size="7" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">Zwitserl.</text>
+      <text x="544" y="153" font-size="7" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">Polen</text>
+      <text x="548" y="195" font-size="7" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">Servië</text>
+      <text x="609" y="204" font-size="9" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">Turkije</text>
+      <text x="676" y="88" font-size="9" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">Rusland</text>
+      <text x="606" y="155" font-size="8" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">Oekraïne</text>
+      <text x="772" y="177" font-size="10" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">China</text>
+      <text x="706" y="260" font-size="9" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">India</text>
+      <text x="860" y="176" font-size="8" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">Japan</text>
+      <text x="836" y="382" font-size="10" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">Australië</text>
+      <text x="911" y="425" font-size="7" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">NZ</text>
+      <text x="563" y="415" font-size="8" fill="#1a5c1a" font-family="sans-serif" text-anchor="middle" pointer-events="none">Zuid-Afrika</text>
+    </svg>
+  </div>
+
+  <div class="info-panel" id="info-panel">
+    <p class="hint">Selecteer een ras uit de lijst of klik op een land op de kaart.</p>
+  </div>
+
+  <footer>Bescherming appelrassen &mdash; alle rechten voorbehouden</footer>
+</div>
+
+<script>
+const data = [
+  {ras:"FAB22150 (breeders ref.)", landen:["EUROPESE UNIE"]},
+  {ras:"FAB22217 (breeders ref.)", landen:["POLEN"]},
+  {ras:"FAB23038 (breeders ref.)", landen:["POLEN"]},
+  {ras:"FRESCO", landen:["ENGELAND","EUROPESE UNIE"]},
+  {ras:"SANTANA", landen:["ENGELAND","EUROPESE UNIE","NEDERLAND","SERVIE","SLOWAKIJE"]},
+  {ras:"SQ 133", landen:["ENGELAND","EUROPESE UNIE"]},
+  {ras:"SQ 159", landen:["AUSTRALIE","CANADA","CHILI","CHINA","ENGELAND","EUROPESE UNIE","INDIA","JAPAN","NIEUW ZEELAND","OEKRAINE","RUSLAND","SERVIE","TURKIJE","ZUID AFRIKA","ZWITSERLAND"]},
+  {ras:"SQ 159 (WUR 200)", landen:["AMERIKA (USA)"]},
+  {ras:"WUR 37", landen:["AMERIKA (USA)","ENGELAND","EUROPESE UNIE","SERVIE","ZUID AFRIKA"]},
+  {ras:"WUR10", landen:["ENGELAND"]},
+  {ras:"WURANDA", landen:["AMERIKA (USA)","EUROPESE UNIE","NOORWEGEN","POLEN","SERVIE"]},
+  {ras:"WURSIXO", landen:["ENGELAND","EUROPESE UNIE","NOORWEGEN","POLEN","SERVIE","ZWITSERLAND"]},
+  {ras:"WURTWINNING", landen:["AMERIKA (USA)","AUSTRALIE","CANADA","CHILI","ENGELAND","EUROPESE UNIE","JAPAN","NIEUW ZEELAND","SERVIE","ZUID AFRIKA","ZWITSERLAND"]}
+];
+
+const countryMap = {
+  "AMERIKA (USA)":"c-usa","CANADA":"c-canada","CHILI":"c-chili",
+  "ENGELAND":"c-engeland","EUROPESE UNIE":"c-eu","EUROPEAN UNION":"c-eu",
+  "NOORWEGEN":"c-noorwegen","NEDERLAND":"c-nederland","SLOWAKIJE":"c-slowakije",
+  "ZWITSERLAND":"c-zwitserland","TURKIJE":"c-turkije","RUSLAND":"c-rusland",
+  "OEKRAINE":"c-oekraine","CHINA":"c-china","INDIA":"c-india","JAPAN":"c-japan",
+  "AUSTRALIE":"c-australie","NIEUW ZEELAND":"c-nieuwzeeland",
+  "ZUIDAFRIKA":"c-zuidafrika","SERVIE":"c-servie","POLEN":"c-polen"
+};
+
+const displayNames = {
+  "AMERIKA (USA)":"Amerika (VS)","CANADA":"Canada","CHILI":"Chili",
+  "ENGELAND":"Engeland","EUROPESE UNIE":"Europese Unie","NOORWEGEN":"Noorwegen",
+  "NEDERLAND":"Nederland","SLOWAKIJE":"Slowakije","ZWITSERLAND":"Zwitserland",
+  "TURKIJE":"Turkije","RUSLAND":"Rusland","OEKRAINE":"Oekraïne","CHINA":"China",
+  "INDIA":"India","JAPAN":"Japan","AUSTRALIE":"Australië",
+  "NIEUW ZEELAND":"Nieuw-Zeeland","ZUIDAFRIKA":"Zuid-Afrika",
+  "SERVIE":"Servië","POLEN":"Polen"
+};
+
+const sel = document.getElementById('ras-select');
+const panel = document.getElementById('info-panel');
+
+data.forEach(d => {
+  const o = document.createElement('option');
+  o.value = d.ras; o.textContent = d.ras;
+  sel.appendChild(o);
+});
+
+function normalizeKey(l) {
+  return l.replace(/ \(.*\)/g,'').trim().toUpperCase();
+}
+
+function clearHighlights() {
+  document.querySelectorAll('.country').forEach(el => el.classList.remove('highlighted'));
+}
+
+function highlightCountries(landen) {
+  clearHighlights();
+  landen.forEach(l => {
+    const key = normalizeKey(l);
+    const id = countryMap[key];
+    if (id) { const el = document.getElementById(id); if (el) el.classList.add('highlighted'); }
+  });
+}
+
+function showRasInfo(rasName) {
+  const r = data.find(d => d.ras === rasName);
+  if (!r) return;
+  highlightCountries(r.landen);
+  const tags = r.landen.map(l => {
+    const k = normalizeKey(l);
+    return `<span class="tag">${displayNames[k] || l}</span>`;
+  }).join('');
+  panel.innerHTML = `<h3>Ras: ${r.ras}</h3><div class="section-label">Beschermd in ${r.landen.length} regio('s)</div><div style="margin-top:8px">${tags}</div>`;
+}
+
+function reset() {
+  sel.value = '';
+  clearHighlights();
+  panel.innerHTML = '<p class="hint">Selecteer een ras uit de lijst of klik op een land op de kaart.</p>';
+}
+
+sel.addEventListener('change', () => { if (sel.value) showRasInfo(sel.value); else reset(); });
+
+document.querySelectorAll('.country').forEach(el => {
+  el.addEventListener('click', () => {
+    const name = el.dataset.name;
+    const key = normalizeKey(name);
+    const matches = data.filter(d => d.landen.some(l => normalizeKey(l) === key));
+    sel.value = '';
+    clearHighlights();
+    el.classList.add('highlighted');
+    const display = displayNames[key] || name;
+    if (matches.length === 0) {
+      panel.innerHTML = `<h3>${display}</h3><p class="hint">Geen rassen beschermd in deze regio.</p>`;
+    } else {
+      const tags = matches.map(r => `<span class="tag">${r.ras}</span>`).join('');
+      panel.innerHTML = `<h3>${display}</h3><div class="section-label">${matches.length} ras(sen) beschermd</div><div style="margin-top:8px">${tags}</div>`;
+    }
+  });
+});
+</script>
+</body>
+</html>
